@@ -23,8 +23,8 @@ module RailsBootstrapHelpers::Renderers
       content_tag :div, id: id, class: "accordion" do
         contents = []
         selector.base "##{id}.accordion" do |base|
-          context.groups.each_with_index do |group, count|
-            contents << build_group(group, count, base)
+          context.each_with_index do |(heading_block, body_block), count|
+            contents << build_group(heading_block, body_block, count, base)
           end
         end
 
@@ -32,49 +32,58 @@ module RailsBootstrapHelpers::Renderers
       end
     end
 
-    def build_group (group, count, accordion_base)
+    def build_group (heading_block, body_block, count, accordion_base)
       base = "accordion-group"
 
       selector.base ".#{base}" do |group_base|
         foobar = self
         content_tag(:div, class: base) do
-          body = "accordion-body"
-          build_heading(group.heading, body, count, accordion_base, group_base) +
-          build_body(body, group.block)
+          build_heading(heading_block, count, accordion_base, group_base) +
+          build_body(body_block)
         end
       end
     end
 
-    def build_heading (heading, body, count, accordion_base, group_base)
-      href = "#{group_base}:nth-child(#{count + 1}) .#{body}.collapse"
+    def build_heading (block, count, accordion_base, group_base)
+      href = "#{group_base}:nth-child(#{count + 1}) .accordion-body.collapse"
 
       content_tag :div, class: "accordion-heading" do
-        content_tag :a, heading,
+        content_tag :a,
           href: href,
           class: "accordion-toggle",
           :"data-toggle" => "collapse",
-          :"data-parent" => accordion_base
+          :"data-parent" => accordion_base,
+          &block
       end
     end
     
-    def build_body (body, block)
-      content_tag :div, class: body + " collapse" do
-        content_tag :div, class: "accordion-inner", &block
+    def build_body (block)
+      content_tag :div, class: 'accordion-body collapse' do
+        content_tag :div, class: "accordion-inner", &block if block
       end
     end
 
     class AccordionContext
-      Group = Struct.new(:heading, :block)
-
-      attr_reader :groups
+      include Enumerable
 
       def initialize (renderer)
         @renderer = renderer
-        @groups = []
+        @headings = []
+        @bodies = []
       end
 
-      def group (heading, &block)
-        @groups << Group.new(heading, block)
+      def heading(&block)
+        @headings << block
+      end
+
+      def body(&block)
+        @bodies << block
+      end
+
+      def each
+        @headings.each_with_index do |heading, index|
+          yield heading, @bodies[index]
+        end
       end
     end
 

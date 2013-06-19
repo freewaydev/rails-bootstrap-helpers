@@ -24,9 +24,8 @@ describe RailsBootstrapHelpers::Helpers::AccordionHelper do
       expected_html = expected_html.gsub(/^\s+/, "").gsub("\n", "")
 
       html = accordion "foo" do |a|
-        a.group "bar" do
-          "content"
-        end
+        a.heading { "bar" }
+        a.body { "content" }
       end
 
       html.should == expected_html
