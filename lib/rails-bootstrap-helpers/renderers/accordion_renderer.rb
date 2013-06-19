@@ -58,8 +58,9 @@ module RailsBootstrapHelpers::Renderers
     end
     
     def build_body (block)
+      block = lambda { '&nbsp;'.html_safe } unless block
       content_tag :div, class: 'accordion-body collapse' do
-        content_tag :div, class: "accordion-inner", &block if block
+        content_tag :div, class: "accordion-inner", &block
       end
     end
 
